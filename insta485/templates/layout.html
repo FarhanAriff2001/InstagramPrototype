@@ -23,5 +23,13 @@
         <br><br><br>
         {% block index%}
         {% endblock%}
+
+        <div id="reactEntry">
+        Loading ...
+        </div>
+        <!-- Load JavaScript -->
+        <script type="text/javascript" src="{{ url_for('static', filename='js/bundle.js') }}"></script>
+
+
     </body>
 </html>
