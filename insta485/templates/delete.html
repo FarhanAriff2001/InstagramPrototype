@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+    {% block index %}
+        <!--Insta posts-->
+        <h1>{{users.username}}</h1>
+        <div class="card-body" >
+            <form action="/accounts/?target=/accounts/login/" method="post" enctype="multipart/form-data">
+            <input type="submit" name="delete" value="confirm delete account"/>
+            <input type="hidden" name="operation" value="delete"/>
+            </form>
+        </div>
+        <p><a href ="{{url_for('edit', )}}"><b>Back to edit account</b></a></p>
+    {% endblock %}

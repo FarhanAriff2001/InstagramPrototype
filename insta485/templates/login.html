@@ -1,0 +1,17 @@
+{% extends "layout2.html" %}
+    {% block index %}
+        <!--Account login-->
+        <!-- DO NOT CHANGE THIS (aside from styling) -->
+        <div>
+            <form action="/accounts/?target=/" method="post" enctype="multipart/form-data">
+                <input type="text" name="username" placeholder="username" required/>
+                <input type="password" name="password" placeholder="password" required/>
+                <input type="submit" value="login"/>
+                <input type="hidden" name="operation" value="login"/>
+            </form>
+        </div>
+
+        <p>Don't have an account? 
+            <a href="{{url_for('create', )}}">Sign up</a>
+        </p>
+    {% endblock %}

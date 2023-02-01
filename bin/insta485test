@@ -1,0 +1,20 @@
+#!/bin/bash
+# insta485db
+
+
+# Stop on errors
+# See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+# 1. Stop on errors and print commands
+set -Eeuo pipefail
+
+# 2. Run
+pycodestyle insta485
+
+# 3. Run
+pydocstyle insta485
+
+# 4. Run
+pylint --disable=cyclic-import --unsafe-load-any-extension=y insta485
+
+# 5. Run all unit tests using 
+pytest -v tests

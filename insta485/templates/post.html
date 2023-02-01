@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+    {% block index %}
+            <!--Post-->
+        <div class="card mx-auto" style="width:900px">
+            <div class="row">
+                <div class="column">
+                    <img src="{{url_for('return_files', filename = post.filename)}}" alt="post.postid" style="width:100%">
+                </div>
+                <div class="column">
+                    <br>
+                    <a href="/users/{{post.owner}}/">
+                        <img src="{{url_for('return_files', filename = post.file)}}" alt="{{post.owner}}'s pic" width="50" height="50">
+                    </a>
+                    &ensp;
+                    <a href="/users/{{post.owner}}/"><b>{{post.owner}}</b></a>
+                    <span style="position: absolute; top: 35px; right: 15px; text-align:right;">
+                        <a href="{{url_for('show_posts', postid = post.postid)}}">{{post.created}}</a>
+                    </span>
+                    <br><br>
+                    <!--No. of likes-->
+                    <h6 class="card-title">
+                        {% if post['likes']  == 1 %}
+                            <b>{{post['likes']}} like</b>
+                        {% else %}
+                            <b>{{post['likes']}} likes</b>
+                        {% endif %}
+                        </h6>
+                    <!--Comments-->
+                    {% for comment in comments %}
+                        <div class="card-text">
+                            <a href="/users/{{comment['owner']}}/">
+                                <b>{{comment['owner']}}</b>
+                            </a> {{comment['text']}}
+
+                            {% if comment.owner == users.username %}
+                                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                                <form action="/comments/?target=/posts/{{comment.postid}}/"
+                                    method="post" enctype="multipart/form-data">
+                                    <input type="hidden" name="operation" value="delete"/>
+                                    <input type="hidden" name="commentid" value="{{comment.commentid}}"/>
+                                    <input type="submit" name="uncomment" value="delete"/>
+                                </form>
+                            {% endif %}
+  
+                            </div>
+                    {% endfor %}
+
+                    <div class="card-body">
+                        {% if post.postid in likes %}
+                            <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                            <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="operation" value="unlike"/>
+                                <input type="hidden" name="postid" value="{{post.postid}}"/>
+                                <input type="submit" name="unlike" value="unlike"/>
+                            </form>
+                        {% else %}
+                            <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                            <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="operation" value="like"/>
+                                <input type="hidden" name="postid" value="{{post.postid}}"/>
+                                <input type="submit" name="like" value="like"/>
+                            </form>
+                        {% endif %}
+                        <br>
+                        <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                        <form action="/comments/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="operation" value="create"/>
+                            <input type="hidden" name="postid" value="{{post.postid}}"/>
+                            <input type="text" name="text" required/>
+                            <input type="submit" name="comment" value="comment"/>
+                        </form>
+                    </div>
+
+                    {% if post.owner == users.username %}
+                        <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                        <form action="/posts/?target=/users/{{post.owner}}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="operation" value="delete"/>
+                            <input type="hidden" name="postid" value="{{post.postid}}"/>
+                            <input type="submit" name="delete" value="delete this post"/>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>   
+        </div>
+    {% endblock %}
+    
