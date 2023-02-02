@@ -140,7 +140,6 @@ def comments():
     if operation == 'delete':
         connection = insta485.model.get_db()
         commentid = flask.request.form["commentid"]
-        logname = flask.session["username"]
         connection.execute(
             "DELETE FROM comments WHERE commentid = ?",
             (commentid, )
