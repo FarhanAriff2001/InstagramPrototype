@@ -6,7 +6,6 @@
         <link href="{{url_for('static', filename= '/css/style.css')}}" rel="stylesheet" type="text/css">
     </head>
     <body>
-
         <div>
             <div style="position: absolute; top: 0; left: 10px; text-align:left; font-size: x-large;">
                 <a href="/">
@@ -20,8 +19,12 @@
                 <a href="{{url_for('show_user', username = users.username )}}">{{users.username}}</a>
             </div>
         </div>
-        <br><br><br>
-        {% block index%}
+
+        <br><br>
+        <hr>
+        <br>
+        
+        {% block index %}
         {% endblock%}
 
         <div id="reactEntry">
