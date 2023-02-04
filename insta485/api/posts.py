@@ -66,7 +66,10 @@ def get_post(postid_url_slug):
     "SELECT filename FROM posts WHERE postid = ?",
     (postid_url_slug, )
   )
-  imgUrl = "/uploads/{}".format(cur.fetchone()['filename'])
+  files = cur.fetchone()
+  if files is None:
+    flask.abort(404)
+  imgUrl = "/uploads/{}".format(files['filename'])
   # 2. Query for likes
   likes = get_likes(postid_url_slug)
   # 3. Query for owner till ownerShowUrl
@@ -318,37 +321,19 @@ def get_posts():
   size = flask.request.args.get("size", default = 10, type = int)
   page = flask.request.args.get("page", default = 0, type = int)
   lte = flask.request.args.get("postid_lte", default = lastrowid, type = int)
+  if size < 0 or page < 0 or lte < 0 :
+    flask.abort(400)
   logname = flask.session['username']
-  url1 = flask.request.environ['RAW_URI']
-  # cur = connection.execute(
-  #   "SELECT DISTINCT postid FROM posts P "
-  #   "WHERE P.owner = ?",
-  #   (logname, )
-  # )  
-  # cur = connection.execute(
-  #   "SELECT DISTINCT postid FROM posts P JOIN following F "
-  #   "ON P.owner = F.username2 WHERE F.username1 = ?",
-  #   (logname, logname, )
-  # )
-  
-  # find list of posts
-  # cur = connection.execute(
-  #   "SELECT P.postid FROM posts P "
-  #   "ORDER BY postid DESC "
-  #   "LIMIT ? OFFSET ?",
-  #   (size, size*page, )
-  # )
-  # posts = cur.fetchall()
   cur = connection.execute(
     "SELECT postid "
     "FROM ( "
     "SELECT * FROM posts WHERE "
     "owner = ? or owner in "
     "(SELECT username2 FROM following where username1 = ?) "
-    ") "
+    ") WHERE postid < ? "
     "ORDER BY postid DESC "
     "LIMIT ? OFFSET ?",
-    (logname, logname, size, size*page, )
+    (logname, logname, lte + 1, size, size*page, )
   )
   posts = cur.fetchall()
   posts_lists = []
@@ -359,6 +344,7 @@ def get_posts():
   # posts_listsA = sorted(posts_lists, reverse =True)
   # fixed url
   url = "/api/v1/posts/"
+  url1 = flask.request.environ['RAW_URI']
   next = ""
   # next url
   if counter < size:
@@ -382,4 +368,3 @@ def get_posts():
   context = {"next" : next, "results" : results, "url" : url1}
   
   return flask.jsonify(context), 200
-
