@@ -2,6 +2,27 @@
 import flask
 import insta485
 
+class InvalidUsage(Exception):
+    status_code = 400
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        rv['status_code'] = self.status_code
+        return rv
+
+@insta485.app.errorhandler(InvalidUsage)
+def handle_invalid_usage(error):
+    response = flask.jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 def authenticate_users():
   connection = insta485.model.get_db()
@@ -14,7 +35,7 @@ def authenticate_users():
       (username, )
     )
     if not cur.fetchone():
-      flask.abort(403)
+      raise InvalidUsage('Forbidden', status_code=403)
     else:
       # authenticate password
       cur = connection.execute(
@@ -23,7 +44,7 @@ def authenticate_users():
       )
       password_s = cur.fetchone()
       if password_s is None:
-          flask.abort(403)
+          raise InvalidUsage('Forbidden', status_code=403)
       stri = password_s['password']
       lists = stri.split('$')
       salt = lists[1]
@@ -34,11 +55,11 @@ def authenticate_users():
       (username, n_password, )
     )
     if not cur.fetchone():
-      flask.abort(403)
+      raise InvalidUsage('Forbidden', status_code=403)
     flask.session['username'] = username
     flask.session['password'] = keyword
   if 'username' not in flask.session:
-    return flask.abort(403)
+    raise InvalidUsage('Forbidden', status_code=403)
   
 
 @insta485.app.route('/api/v1/')
@@ -60,15 +81,16 @@ def get_post(postid_url_slug):
   # 1. Query for comments untill imgUrl
   comments = get_comments(postid_url_slug)
   comments_url = "/api/v1/comments/?postid={}".format(postid_url_slug)
-  created = ""
+
   connection = insta485.model.get_db()
   cur = connection.execute(
-    "SELECT filename FROM posts WHERE postid = ?",
+    "SELECT filename, created FROM posts WHERE postid = ?",
     (postid_url_slug, )
   )
   files = cur.fetchone()
   if files is None:
-    flask.abort(404)
+    raise InvalidUsage('Not found', status_code=404)
+  created = files['created']
   imgUrl = "/uploads/{}".format(files['filename'])
   # 2. Query for likes
   likes = get_likes(postid_url_slug)
@@ -85,13 +107,13 @@ def get_post(postid_url_slug):
   ownerImgUrl = "/uploads/{}".format(post['file'])
   ownerShowUrl = "/users/{}/".format(post['owner'])
   postShowUrl = "/posts/{}/".format(postid_url_slug)
-  postid = postid_url_slug
   url =  "/api/v1/posts/{}/".format(postid_url_slug)
   context = {"comments" : comments, "comments_url" : comments_url,
              "created" : created, "imgUrl" : imgUrl, "likes" : likes,
              "owner" : owner, "ownerImgUrl" : ownerImgUrl,
              "ownerShowUrl" : ownerShowUrl,
-             "postShowUrl" : postShowUrl, "postid" : postid, "url" : url}
+             "postShowUrl" : postShowUrl, "postid" : postid_url_slug, 
+             "url" : url}
   return flask.jsonify(context), 200
 
 
@@ -192,16 +214,10 @@ def create_like(username, postid):
     (username, postid, )
   )
   connection.commit()
-  
-  # find owner of the post
-  cur = connection.execute(
-    "SELECT owner FROM posts WHERE postid = ?",
-    (postid, )
-  )
-  owner = cur.fetchone()
+
   # find info for the return
   cur = connection.execute(
-    "SELECT likeid, owner FROM likes WHERE rowid = last_insert_rowid()",
+    "SELECT likeid FROM likes WHERE rowid = last_insert_rowid()",
   )
   likes = cur.fetchone()
   context = {"likeid" : likes['likeid'], "url" : "/api/v1/likes/{}/".format(likes['likeid'])}
@@ -213,7 +229,6 @@ def delete_likes(likeid):
   """To delete like."""
   authenticate_users()
   connection = insta485.model.get_db()
-  likeid = likeid
   logname = flask.session['username']
   cur = connection.execute(
       "SELECT likeid, owner "
@@ -232,7 +247,8 @@ def delete_likes(likeid):
       (likeid, )
   )
   connection.commit()
-  return flask.redirect('/api/v1/posts/1'), 204
+  #return flask.redirect('/api/v1/posts/1'), 204
+  return '', 204
 
 
 @insta485.app.route('/api/v1/comments/', methods=['POST'])
@@ -251,6 +267,7 @@ def post_comments():
 def create_comment(username, postid, text):
   """Make helper function to create comments"""
   connection = insta485.model.get_db()
+
   # INSERT INTO comments table
   connection.execute(
     "INSERT INTO comments (owner, postid, text) "
@@ -278,7 +295,7 @@ def create_comment(username, postid, text):
     
   context = {"commentid" : comment['commentid'], "lognameOwnsThis" : boole,
                "owner" : comment['owner'], "ownerShowUrl" : "/users/{}/".format(comment['owner']),
-               "text" : comment['text'], "url" : "/api/v1/comments/{}/".format(postid)}  
+               "text" : comment['text'], "url" : "/api/v1/comments/{}/".format(comment['commentid'])}  
   return context
 
 
@@ -287,7 +304,6 @@ def delete_comments(commentid):
   """To delete comment."""
   authenticate_users()
   connection = insta485.model.get_db()
-  commentid = commentid
   logname = flask.session['username']
   cur = connection.execute(
       "SELECT commentid, owner "
@@ -306,15 +322,24 @@ def delete_comments(commentid):
       (commentid, )
   )
   connection.commit()
-  return flask.redirect('/api/v1/posts/1'), 204
+  #return flask.redirect('/api/v1/posts/1'), 204
+  return '', 204
 
 
 @insta485.app.route('/api/v1/posts/', methods=['GET'])
 def get_posts():
   authenticate_users()
+
+  logname = flask.session['username']
+
   connection = insta485.model.get_db()
   cur = connection.execute(
-    "SELECT MAX(P.postid) as post FROM posts P",
+    "SELECT MAX(postid) as post "
+    "FROM ( "
+    "SELECT * FROM posts WHERE "
+    "owner = ? or owner in "
+    "(SELECT username2 FROM following where username1 = ?))",
+    (logname, logname, )
   )
   lastrowid = cur.fetchone()['post']
   
@@ -322,8 +347,8 @@ def get_posts():
   page = flask.request.args.get("page", default = 0, type = int)
   lte = flask.request.args.get("postid_lte", default = lastrowid, type = int)
   if size < 0 or page < 0 or lte < 0 :
-    flask.abort(400)
-  logname = flask.session['username']
+    raise InvalidUsage('Bad request', status_code=400)
+  
   cur = connection.execute(
     "SELECT postid "
     "FROM ( "
@@ -364,7 +389,6 @@ def get_posts():
        }
       )
 
-  
   context = {"next" : next, "results" : results, "url" : url1}
   
   return flask.jsonify(context), 200
