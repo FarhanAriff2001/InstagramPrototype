@@ -2,6 +2,45 @@
 import flask
 import insta485
 
+
+def authenticate_users():
+  connection = insta485.model.get_db()
+  if flask.request.authorization:
+    username = flask.request.authorization['username']
+    keyword = flask.request.authorization['password']
+    # authenticate username
+    cur = connection.execute(
+      "SELECT username from users WHERE username= ?",
+      (username, )
+    )
+    if not cur.fetchone():
+      flask.abort(403)
+    else:
+      # authenticate password
+      cur = connection.execute(
+          "SELECT password from users WHERE username= ?",
+          (username, )
+      )
+      password_s = cur.fetchone()
+      if password_s is None:
+          flask.abort(403)
+      stri = password_s['password']
+      lists = stri.split('$')
+      salt = lists[1]
+      n_password = insta485.views.index.salt_password(keyword, salt)
+
+    cur = connection.execute(
+      "SELECT username from users WHERE username= ? AND password = ?",
+      (username, n_password, )
+    )
+    if not cur.fetchone():
+      flask.abort(403)
+    flask.session['username'] = username
+    flask.session['password'] = keyword
+  if 'username' not in flask.session:
+    return flask.abort(403)
+  
+
 @insta485.app.route('/api/v1/')
 def get_api():
   context={
@@ -192,6 +231,7 @@ def delete_likes(likeid):
   connection.commit()
   return flask.redirect('/api/v1/posts/1'), 204
 
+
 @insta485.app.route('/api/v1/comments/', methods=['POST'])
 def post_comments():
   """Post comments."""
@@ -203,6 +243,7 @@ def post_comments():
   username = flask.request.authorization['username']
   context = create_comment(username, postid, text)
   return flask.jsonify(context), 201
+
 
 def create_comment(username, postid, text):
   """Make helper function to create comments"""
@@ -237,6 +278,7 @@ def create_comment(username, postid, text):
                "text" : comment['text'], "url" : "/api/v1/comments/{}/".format(postid)}  
   return context
 
+
 @insta485.app.route('/api/v1/comments/<int:commentid>/', methods=['DELETE'])
 def delete_comments(commentid):
   """To delete comment."""
@@ -263,15 +305,21 @@ def delete_comments(commentid):
   connection.commit()
   return flask.redirect('/api/v1/posts/1'), 204
 
+
 @insta485.app.route('/api/v1/posts/', methods=['GET'])
 def get_posts():
   authenticate_users()
-  flask.request.args.get("size", default = 10, type = int)
-  flask.request.args.get("page", default = 0, type = int)
-  
-  
-  logname = flask.session['username']
   connection = insta485.model.get_db()
+  cur = connection.execute(
+    "SELECT MAX(P.postid) as post FROM posts P",
+  )
+  lastrowid = cur.fetchone()['post']
+  
+  size = flask.request.args.get("size", default = 10, type = int)
+  page = flask.request.args.get("page", default = 0, type = int)
+  lte = flask.request.args.get("postid_lte", default = lastrowid, type = int)
+  logname = flask.session['username']
+  url1 = flask.request.environ['RAW_URI']
   # cur = connection.execute(
   #   "SELECT DISTINCT postid FROM posts P "
   #   "WHERE P.owner = ?",
@@ -283,20 +331,45 @@ def get_posts():
   #   (logname, logname, )
   # )
   
+  # find list of posts
+  # cur = connection.execute(
+  #   "SELECT P.postid FROM posts P "
+  #   "ORDER BY postid DESC "
+  #   "LIMIT ? OFFSET ?",
+  #   (size, size*page, )
+  # )
+  # posts = cur.fetchall()
   cur = connection.execute(
-    "SELECT DISTINCT postid FROM posts P "
-    "WHERE P.owner = ? "
-    "UNION " 
-    "SELECT DISTINCT postid FROM posts P JOIN following F "
-    "ON P.owner = F.username2 WHERE F.username1 = ?",
-    (logname, logname, )
+    "SELECT postid "
+    "FROM ( "
+    "SELECT * FROM posts WHERE "
+    "owner = ? or owner in "
+    "(SELECT username2 FROM following where username1 = ?) "
+    ") "
+    "ORDER BY postid DESC "
+    "LIMIT ? OFFSET ?",
+    (logname, logname, size, size*page, )
   )
   posts = cur.fetchall()
   posts_lists = []
-  for post in posts:
-    posts_lists.append(post["postid"])  
-  posts_lists.sort(reverse=True)
+  counter = 0
+  for i in posts:
+    posts_lists.insert(counter, i["postid"])
+    counter = counter + 1
+  # posts_listsA = sorted(posts_lists, reverse =True)
+  # fixed url
+  url = "/api/v1/posts/"
   next = ""
+  # next url
+  if counter < size:
+    next = ""
+  else :
+    size_s = "?size={}".format(size)
+    page += 1
+    page_s = "&page={}".format(page)
+    lte_s = "&postid_lte={}".format(lte)
+    next = url + size_s + page_s + lte_s
+  # making list of results(post)
   results = []
   for post in posts_lists:
     results.append(
@@ -304,46 +377,9 @@ def get_posts():
        "url" : "/api/v1/posts/{}/".format(post)
        }
       )
-  url = "/api/v1/posts/"
+
   
-  context = {"next" : next, "results" : results, "url" : url}
+  context = {"next" : next, "results" : results, "url" : url1}
   
   return flask.jsonify(context), 200
 
-def authenticate_users():
-  connection = insta485.model.get_db()
-  if flask.request.authorization:
-    username = flask.request.authorization['username']
-    keyword = flask.request.authorization['password']
-    # authenticate username
-    cur = connection.execute(
-      "SELECT username from users WHERE username= ?",
-      (username, )
-    )
-    if not cur.fetchone():
-      flask.abort(403)
-    else:
-      # authenticate password
-      cur = connection.execute(
-          "SELECT password from users WHERE username= ?",
-          (username, )
-      )
-      password_s = cur.fetchone()
-      if password_s is None:
-          flask.abort(403)
-      stri = password_s['password']
-      lists = stri.split('$')
-      salt = lists[1]
-      n_password = insta485.views.index.salt_password(keyword, salt)
-
-    cur = connection.execute(
-      "SELECT username from users WHERE username= ? AND password = ?",
-      (username, n_password, )
-    )
-    if not cur.fetchone():
-      flask.abort(403)
-    flask.session['username'] = username
-    flask.session['password'] = keyword
-  if 'username' not in flask.session:
-    return flask.abort(403)
-  
