@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 
+// function LikeUnlikeButton() {
+//   return (
+//     <button className="like-unlike-button">
+//       FIXME button text here
+//     </button>
+//   );
+// }
+
 // The parameter of this function is an object with a string called url inside it.
 // url is a prop for the Post component.
 export default function Post({ url }) {
@@ -39,10 +47,37 @@ export default function Post({ url }) {
 
   // Render post image and post owner
   return (
-    <div className="post">
+    /*<div className="post">
       <img src={imgUrl} alt="post_image" />
       <p>{owner}</p>
+    </div>*/
+
+  
+    <div className="card mx-auto" style={{ width: 600 }}>
+      <div className="card-body">
+        <a href="{{url_for('show_user', username = post.owner)}}">
+          <img
+            src="{{url_for('return_files', filename = post.file)}}"
+            alt="{{post.owner}}'s pic"
+            width={50}
+            height={50}
+          />
+        </a>
+        <a href="{{url_for('show_user', username = post.owner)}}">
+          <b>
+            {post.owner}
+          </b>
+        </a>
+        <span
+          style={{ position: "absolute", top: 35, right: 15, textAlign: "right" }}
+        >
+          <a href="{{url_for('show_posts', postid = post.postid)}}">
+            {post.created}
+          </a>
+        </span>
+      </div>
     </div>
+
   );
 }
 

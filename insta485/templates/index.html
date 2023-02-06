@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
     {% block index %}
-        <!--Insta posts-->
+        <!--
+        <Insta posts>
         {% for post in posts %}
             {% if post.owner == users.username %}
                 <div class="card mx-auto" style="width:600px">
@@ -18,7 +19,7 @@
                     <img class="card-img-top" src="{{url_for('return_files', filename = post.filename)}}" alt="{{post.owner}}'s post" style="width:100%">
                 
                     <div class="card-body">
-                        <!--No. of likes-->
+                        <No. of likes>
                         <h6 class="card-title">
                         {% if post['likes']  == 1 %}
                             <b>{{post['likes']}} like</b>
@@ -27,7 +28,7 @@
                         {% endif %}
                         </h6>
         
-                        <!--Comments-->
+                        <Comments>
                         {% for comment in comments %}
                             <p class="card-text">
                                 {% if comment.postid == post.postid %}
@@ -41,14 +42,14 @@
 
                     <div class="card-body">
                         {% if post.postid in likes %}
-                            <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                            <DO NOT CHANGE THIS (aside from where we say 'FIXME') >
                             <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
                                 <input type="hidden" name="operation" value="unlike"/>
                                 <input type="hidden" name="postid" value="{{post.postid}}"/>
                                 <input type="submit" name="unlike" value="unlike"/>
                             </form>
                         {% else %}
-                            <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                            < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
                             <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
                                 <input type="hidden" name="operation" value="like"/>
                                 <input type="hidden" name="postid" value="{{post.postid}}"/>
@@ -57,7 +58,7 @@
                         {% endif %}
                     </div>
                     <div class="card-body">
-                        <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                        <DO NOT CHANGE THIS (aside from where we say 'FIXME')>
                         <form action="/comments/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="operation" value="create"/>
                             <input type="hidden" name="postid" value="{{post.postid}}"/>
@@ -89,7 +90,7 @@
                         <img class="card-img-top" src="{{url_for('return_files', filename = post.filename)}}" alt="{{post.owner}}'s post" style="width:100%">
                     
                         <div class="card-body">
-                            <!--No. of likes-->
+                            <No. of likes>
                             <h6 class="card-title">
                             {% if post['likes'] == 1 %}
                                 <b>{{post['likes']}} like</b>
@@ -98,7 +99,7 @@
                             {% endif %}
                             </h6>
             
-                            <!--Comments-->
+                            <Comments>
                             {% for comment in comments %}
                             <p class="card-text">
                                 {% if comment.postid == post.postid %}
@@ -111,14 +112,14 @@
                         </div>
                         <div class="card-body">
                             {% if post.postid in likes %}
-                                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                                < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
                                 <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
                                     <input type="hidden" name="operation" value="unlike"/>
                                     <input type="hidden" name="postid" value="{{post.postid}}"/>
                                     <input type="submit" name="unlike" value="unlike"/>
                                 </form>
                             {% else %}
-                                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                                < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
                                 <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
                                     <input type="hidden" name="operation" value="like"/>
                                     <input type="hidden" name="postid" value="{{post.postid}}"/>
@@ -127,7 +128,7 @@
                             {% endif %}
                         </div>
                         <div class="card-body">
-                            <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                            < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
                             <form action="/comments/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
                                 <input type="hidden" name="operation" value="create"/>
                                 <input type="hidden" name="postid" value="{{post.postid}}"/>
@@ -140,4 +141,12 @@
                 {% endif %}
             {% endfor %}
         {% endfor %}
+        -->
+
+        <div id="reactEntry">
+        Loading ...
+        </div>
+        <!-- Load JavaScript -->
+        <script type="text/javascript" src="{{ url_for('static', filename='js/bundle.js') }}"></script>
+
     {% endblock %}
