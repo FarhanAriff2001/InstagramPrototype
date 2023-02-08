@@ -1,89 +1,128 @@
 import React, { useState, useEffect } from "react";
-
+import moment from 'moment';
+  
 function OwnerTime({ ownerShowUrl, ownerImgUrl, owner, postShowUrl, created }) {
     return (
-        <div class="card-body">
-            <a href={ownerShowUrl}>
-                <img
-                    src={ownerImgUrl}
-                    alt={{owner} + "'s pic"}
-                    width={50}
-                    height={50} />
-            </a>
-            {'  '}
-            <a href={ownerShowUrl}>
-                <b>
-                    {owner}
-                </b>
-            </a>
-            <span style={{ position: "absolute", top: 35, right: 15, textAlign: "right" }}>
-                <a href={postShowUrl}>
-                    {created}
-                </a>
-            </span>
+      <div className="card-body">
+        <a href={ownerShowUrl}>
+          <img
+              src={ownerImgUrl}
+              alt={owner}
+              width={50}
+              height={50} />
+        </a>
+        {'  '}
+        <a href={ownerShowUrl}>
+          <b>
+              {owner}
+          </b>
+        </a>
+        <span style={{ position: "absolute", top: 35, right: 15, textAlign: "right" }}>
+          <a href={postShowUrl}>
+              {created}
+          </a>
+        </span>
+      </div>
+    );
+}
+  
+function PostImage({imgUrl, owner}) {
+return (
+    <img 
+        className="card-img-top" 
+        src= {imgUrl} 
+        alt= {owner} 
+        styles="width:100%" 
+    />
+);
+}
+
+function PostLikesComments({likes, comments}) {
+    return (
+        <div className = "card-body">
+            <h6 className = "card-title">
+                {likes.numLikes}
+                {' '}
+                {likes.numLikes == 1 ? 'like' : 'likes'}
+            </h6>    
+            {comments.map((comment) => (
+                <div className="card-text" key={comment.commentid}>
+                    <a href = {comment.ownerShowUrl}>
+                        <b>{comment.owner}</b>
+                    </a>
+                    {' '}
+                    {comment.text}
+                </div>
+            ))}
         </div>
     );
 }
 
 export default function OnePost({ post }) {
-
-    const [comments, setComments] = useState([]);
-    const [comments_url, setCommentsUrl] = useState("");
+    // for postTime
     const [created, setCreated] = useState("");
-    const [imgUrl, setImgUrl] = useState("");
-    const [likes, setLikes] = ({});
     const [owner, setOwner] = useState("");
     const [ownerImgUrl, setOwnerImgUrl] = useState("");
     const [ownerShowUrl, setOwnerShowUrl] = useState("");
     const [postShowUrl, setPostShowUrl] = useState("");
+    // for post picture
+    const [imgUrl, setImgUrl] = useState("");
+    // // for post likes
+    const [likes, setLikes] = useState({});
+    // // for post comments
+    const [comments, setComments] = useState([]);
+    // const [comments_url, setCommentsUrl] = useState("");
 
     useEffect(() => {
-        // Declare a boolean flag that we can use to cancel the API request.
         let ignoreStaleRequest = false;
-
-        // Call REST API to get the post's information
         fetch(post.url, { credentials: "same-origin" })
-        .then((response) => {
+            .then((response) => {
             if (!response.ok) throw Error(response.statusText);
             return response.json();
-        })
-        .then((data) => {
-            // If ignoreStaleRequest was set to true, we want to ignore the results of the
-            // the request. Otherwise, update the state to trigger a new render.
+            })
+            .then((data) => {
             if (!ignoreStaleRequest) {
-            setComments(data.comments);
-            setCommentsUrl(data.comments_url);
-            setCreated(data.created);
-            setImgUrl(data.imgUrl);
-            setLikes(data.likes);
-            setOwner(data.owner);
-            setOwnerImgUrl(data.ownerImgUrl);
-            setOwnerShowUrl(data.ownerShowUrl);
-            setPostShowUrl(data.postShowUrl);
+                // for postTime
+                const m = moment.utc(data.created, 'YYYY-MM-DD hh:mm:ss');
+                setCreated(m.local().fromNow());
+                setOwner(data.owner);
+                setOwnerImgUrl(data.ownerImgUrl);
+                setOwnerShowUrl(data.ownerShowUrl);
+                setPostShowUrl(data.postShowUrl);
+                // // for post picture
+                setImgUrl(data.imgUrl);
+                // // for post likes
+                setLikes(data.likes);
+                // // for post comments
+                setComments(data.comments);
+                // setCommentsUrl(data.comments_url);
             }
-        })
-        .catch((error) => console.log(error));
+            })
+            .catch((error) => console.log(error));
 
         return () => {
-        // This is a cleanup function that runs whenever the Post component
-        // unmounts or re-renders. If a Post is about to unmount or re-render, we
-        // should avoid updating state.
-        ignoreStaleRequest = true;
+            ignoreStaleRequest = true;
         };
-    
-    }, [url]);
-  
+
+    }, [post.url]);
+
     return (
-        <div class="card mx-auto" style="width:600px">
-            
+        <>
+        <div className="card mx-auto" style={{ width: '600px' }}>
             <OwnerTime
                 ownerShowUrl={ownerShowUrl}
                 ownerImgUrl={ownerImgUrl}
                 owner={owner}
                 postShowUrl={postShowUrl}
-                created={created}
-            />
-
+                created={created} />
+            <PostImage
+                imgUrl={imgUrl}
+                owner={owner} />
+            <PostLikesComments
+                likes={likes}
+                comments={comments} />
         </div>
+        <br />
+        </>
     );
 }
