@@ -1,5 +1,147 @@
 {% extends "layout.html" %}
     {% block index %}
+        <!--
+        <Insta posts>
+        {% for post in posts %}
+            {% if post.owner == users.username %}
+                <div class="card mx-auto" style="width:600px">
+                    <div class="card-body">
+                        <a href="{{url_for('show_user', username = post.owner)}}">
+                            <img src="{{url_for('return_files', filename = post.file)}}" alt="{{post.owner}}'s pic" width="50" height="50">
+                        </a>
+                        &ensp;
+                        <a href="{{url_for('show_user', username = post.owner)}}"><b>{{post.owner}}</b></a>
+                        <span style="position: absolute; top: 35px; right: 15px; text-align:right;">
+                            <a href="{{url_for('show_posts', postid = post.postid)}}">{{post.created}}</a>
+                        </span>
+                    </div>
+
+                    <img class="card-img-top" src="{{url_for('return_files', filename = post.filename)}}" alt="{{post.owner}}'s post" style="width:100%">
+                
+                    <div class="card-body">
+                        <No. of likes>
+                        <h6 class="card-title">
+                        {% if post['likes']  == 1 %}
+                            <b>{{post['likes']}} like</b>
+                        {% else %}
+                            <b>{{post['likes']}} likes</b>
+                        {% endif %}
+                        </h6>
+        
+                        <Comments>
+                        {% for comment in comments %}
+                            <p class="card-text">
+                                {% if comment.postid == post.postid %}
+                                <a href="{{url_for('show_user', username = comment.owner)}}">
+                                    <b>{{comment['owner']}}</b>
+                                </a> {{comment['text']}}
+                                {% endif %}
+                            </p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="card-body">
+                        {% if post.postid in likes %}
+                            <DO NOT CHANGE THIS (aside from where we say 'FIXME') >
+                            <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="operation" value="unlike"/>
+                                <input type="hidden" name="postid" value="{{post.postid}}"/>
+                                <input type="submit" name="unlike" value="unlike"/>
+                            </form>
+                        {% else %}
+                            < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
+                            <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="operation" value="like"/>
+                                <input type="hidden" name="postid" value="{{post.postid}}"/>
+                                <input type="submit" name="like" value="like"/>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <DO NOT CHANGE THIS (aside from where we say 'FIXME')>
+                        <form action="/comments/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="operation" value="create"/>
+                            <input type="hidden" name="postid" value="{{post.postid}}"/>
+                            <input type="text" name="text" required/>
+                            <input type="submit" name="comment" value="comment"/>
+                        </form>
+                    </div>
+
+                </div>
+                <br>
+            {% endif %}
+            
+            {% for follow in following %}
+                {% if post.owner in follow.username2 %}
+                    <div class="card mx-auto" style="width:600px">
+                    
+                        <div class="card-body">
+                            <a href="{{url_for('show_user', username = post.owner)}}">
+                                <img src="{{url_for('return_files', filename = post.file)}}" alt="{{post.owner}}'s pic" width="50" height="50">
+                            </a>
+                            &ensp;
+                            <a href="{{url_for('show_user', username = post.owner)}}"><b>{{post.owner}}</b></a>
+                        
+                            <span style="position: absolute; top: 35px; right: 15px; text-align:right;">
+                                <a href="{{url_for('show_posts', postid = post.postid)}}">{{post.created}}</a>
+                            </span>
+                        </div>
+                    
+                        <img class="card-img-top" src="{{url_for('return_files', filename = post.filename)}}" alt="{{post.owner}}'s post" style="width:100%">
+                    
+                        <div class="card-body">
+                            <No. of likes>
+                            <h6 class="card-title">
+                            {% if post['likes'] == 1 %}
+                                <b>{{post['likes']}} like</b>
+                            {% else %}
+                                <b>{{post['likes']}} likes</b>
+                            {% endif %}
+                            </h6>
+            
+                            <Comments>
+                            {% for comment in comments %}
+                            <p class="card-text">
+                                {% if comment.postid == post.postid %}
+                                <a href="{{url_for('show_user', username = comment.owner)}}">
+                                    <b>{{comment['owner']}}</b>
+                                </a> {{comment['text']}}
+                                {% endif %}
+                            </p>
+                            {% endfor %}
+                        </div>
+                        <div class="card-body">
+                            {% if post.postid in likes %}
+                                < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
+                                <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                                    <input type="hidden" name="operation" value="unlike"/>
+                                    <input type="hidden" name="postid" value="{{post.postid}}"/>
+                                    <input type="submit" name="unlike" value="unlike"/>
+                                </form>
+                            {% else %}
+                                < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
+                                <form action="/likes/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                                    <input type="hidden" name="operation" value="like"/>
+                                    <input type="hidden" name="postid" value="{{post.postid}}"/>
+                                    <input type="submit" name="like" value="like"/>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            < DO NOT CHANGE THIS (aside from where we say 'FIXME') >
+                            <form action="/comments/?target=/posts/{{post.postid}}/" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="operation" value="create"/>
+                                <input type="hidden" name="postid" value="{{post.postid}}"/>
+                                <input type="text" name="text" required/>
+                                <input type="submit" name="comment" value="comment"/>
+                            </form>
+                        </div>
+                    </div>
+                    <br>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        -->
     <div id="reactEntry">
         Loading ...
     </div>

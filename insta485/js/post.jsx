@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-// import OnePost from "./OnePost";
-//import OnePost from "./OnePost";
 
 function OwnerTime({ ownerShowUrl, ownerImgUrl, owner, postShowUrl, created }) {
   return (
@@ -28,6 +26,36 @@ function OwnerTime({ ownerShowUrl, ownerImgUrl, owner, postShowUrl, created }) {
   );
 }
 
+function PostImage({imgUrl, owner}) {
+  return (
+    <img 
+    className="card-img-top" 
+    src= {imgUrl} 
+    alt= {owner} 
+    styles="width:100%" />
+  );
+}
+
+function PostLikesComments({likes, comments}) {
+  return (
+    <div className = "card-body">
+      <h6 className = "cardtitle">
+        {likes.numLikes}
+        {' '}
+        {likes.numLikes == 1 ? 'like' : 'likes'}
+        </h6>    
+      {comments.map((comment) => (
+        <p className="card-text">
+        <a href = {comment.ownerShowUrl}>
+          <b>{comment.owner}</b>
+        </a>{' '}
+        {comment.text}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 function OnePost({ post }) {
   // for postTime
   const [created, setCreated] = useState("");
@@ -37,11 +65,11 @@ function OnePost({ post }) {
   const [postShowUrl, setPostShowUrl] = useState("");
   // for post picture
   const [imgUrl, setImgUrl] = useState("");
-  // for post likes
-  const [likes, setLikes] = ({});
-  // for post comments
+  // // for post likes
+  const [likes, setLikes] = useState({});
+  // // for post comments
   const [comments, setComments] = useState([]);
-  const [comments_url, setCommentsUrl] = useState("");
+  // const [comments_url, setCommentsUrl] = useState("");
 
   useEffect(() => {
       let ignoreStaleRequest = false;
@@ -58,13 +86,13 @@ function OnePost({ post }) {
             setOwnerImgUrl(data.ownerImgUrl);
             setOwnerShowUrl(data.ownerShowUrl);
             setPostShowUrl(data.postShowUrl);
-            // for post picture
+            // // for post picture
             setImgUrl(data.imgUrl);
-            // for post likes
+            // // for post likes
             setLikes(data.likes);
-            // for post comments
+            // // for post comments
             setComments(data.comments);
-            setCommentsUrl(data.comments_url);
+            // setCommentsUrl(data.comments_url);
           }
         })
         .catch((error) => console.log(error));
@@ -77,16 +105,17 @@ function OnePost({ post }) {
 
   return (
       <div className="card mx-auto" styles="width:600px">
-          
-          <OwnerTime
-              ownerShowUrl={ownerShowUrl}
-              ownerImgUrl={ownerImgUrl}
-              owner={owner}
-              postShowUrl={postShowUrl}
-              created={created}
-          />
-          <></>
-            
+        <OwnerTime
+          ownerShowUrl={ownerShowUrl}
+          ownerImgUrl={ownerImgUrl}
+          owner={owner}
+          postShowUrl={postShowUrl}
+          created={created} />
+        <PostImage 
+          imgUrl={imgUrl}
+          owner={owner} />
+        <PostLikesComments likes = {likes}
+        comments = {comments} />
       </div>
   );
 }
@@ -126,3 +155,4 @@ export default function Post({ url }) {
 Post.propTypes = {
   url: PropTypes.string.isRequired,
 };
+
