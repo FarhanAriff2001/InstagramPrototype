@@ -58,6 +58,7 @@ def authenticate_users():
       raise InvalidUsage('Forbidden', status_code=403)
     flask.session['username'] = username
     flask.session['password'] = keyword
+    
   if 'username' not in flask.session:
     raise InvalidUsage('Forbidden', status_code=403)
   

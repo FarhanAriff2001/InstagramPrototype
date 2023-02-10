@@ -37,24 +37,34 @@ return (
 );
 }
 
-function PostLikesComments({likes, comments}) {
+function PostLikes(props) {
     return (
-        <div className = "card-body">
-            <h6 className = "card-title">
-                {likes.numLikes}
+        // Like-unlike button and display numLikes
+        <>
+        <button className="like-unlike-button" 
+            onClick={props.onClick}>
+            {props.lognameLikesThis ? 'unlike' : 'like'}
+        </button>
+        <h6 className = "card-title">
+            {props.numLikes}
+            {' '}
+            {props.numLikes == 1 ? 'like' : 'likes'}
+        </h6>    
+        </>
+    );
+}
+
+function PostComments( {comments} ) {
+    return (
+        comments.map((comment) => (
+            <div className="card-text" key={comment.commentid}>
+                <a href = {comment.ownerShowUrl}>
+                    <b>{comment.owner}</b>
+                </a>
                 {' '}
-                {likes.numLikes == 1 ? 'like' : 'likes'}
-            </h6>    
-            {comments.map((comment) => (
-                <div className="card-text" key={comment.commentid}>
-                    <a href = {comment.ownerShowUrl}>
-                        <b>{comment.owner}</b>
-                    </a>
-                    {' '}
-                    {comment.text}
-                </div>
-            ))}
-        </div>
+                {comment.text}
+            </div>
+        ))
     );
 }
 
@@ -68,10 +78,50 @@ export default function OnePost({ post }) {
     // for post picture
     const [imgUrl, setImgUrl] = useState("");
     // // for post likes
-    const [likes, setLikes] = useState({});
+    const [lognameLikesThis, setLognameLikesThis] = useState(false);
+    const [numLikes, setNumLikes] = useState(0);
+    const [likeUrl, setLikeUrl] = useState("");
+
     // // for post comments
     const [comments, setComments] = useState([]);
     // const [comments_url, setCommentsUrl] = useState("");
+
+    const handleLike = (e) => {
+        // if logname likes a post
+        if(!lognameLikesThis) {
+            setLognameLikesThis(true);
+            setNumLikes(numLikes + 1);
+
+            const url = '/api/v1/likes/?postid=' + post.postid;
+            fetch(url, { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                } 
+            }, { credentials: "same-origin" })
+            .then(() => {
+                console.log('Like created');
+            })
+        }
+        // if logname unlikes a post
+        else {
+            setLognameLikesThis(false);
+            setNumLikes(numLikes - 1);
+
+            fetch(likeUrl, { 
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                } 
+             }, { credentials: "same-origin" })
+            .then(() => {
+                console.log('Like deleted');
+            })
+        }
+
+        e.preventDefault();
+    }
+
 
     useEffect(() => {
         let ignoreStaleRequest = false;
@@ -92,7 +142,9 @@ export default function OnePost({ post }) {
                 // // for post picture
                 setImgUrl(data.imgUrl);
                 // // for post likes
-                setLikes(data.likes);
+                setLognameLikesThis(data.likes.lognameLikesThis);
+                setNumLikes(data.likes.numLikes);
+                setLikeUrl(data.likes.url);
                 // // for post comments
                 setComments(data.comments);
                 // setCommentsUrl(data.comments_url);
@@ -118,9 +170,17 @@ export default function OnePost({ post }) {
             <PostImage
                 imgUrl={imgUrl}
                 owner={owner} />
-            <PostLikesComments
-                likes={likes}
-                comments={comments} />
+
+            <div className = "card-body">
+                <PostLikes
+                    lognameLikesThis={lognameLikesThis}
+                    numLikes={numLikes}
+                    onClick={handleLike}
+                />
+                <PostComments
+                    comments={comments} 
+                />
+            </div>
         </div>
         <br />
         </>
