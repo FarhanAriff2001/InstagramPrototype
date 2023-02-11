@@ -188,7 +188,7 @@ def post_likes():
   """Post comments."""
   authenticate_users()
   postid = flask.request.args.get('postid')
-  username = flask.request.authorization['username']
+  username = flask.session['username']
   connection = insta485.model.get_db()
   cur = connection.execute(
     "SELECT likeid, owner FROM likes "
@@ -260,7 +260,7 @@ def post_comments():
   text = flask.request.get_json()['text']
   # text = flask.request.data.get('key')
   postid = flask.request.args.get('postid')
-  username = flask.request.authorization['username']
+  username = flask.session['username']
   context = create_comment(username, postid, text)
   return flask.jsonify(context), 201
 
