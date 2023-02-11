@@ -55,10 +55,6 @@ function PostLikes(props) {
     );
 }
 
-// .then((data) =>{
-//         // const newComments = comments.filter((comment) => comment.id !== id)
-//     })
-
 function EachComment({ comment, comments, setComments }) {
 
     const handleDelete = (event) => {
@@ -113,35 +109,7 @@ function PostComments({ comments, setComments }) {
             {rows}
         </>
     );
-    // return (
-    //     comments.map((comment) => (
-    //         <div className="card-text" key={comment.commentid}>
-    //             <a href = {comment.ownerShowUrl}>
-    //                 <b>{comment.owner}</b>
-    //             </a>
-    //             {' '}
-    //             {comment.text}
-    //             {'  '}
-    //             {comment.lognameOwnsThis && 
-    //                 <button className="delete-comment-button" onClick={onClick}>
-    //                     {'Delete button'}
-    //                 </button>
-    //             }
-    //         </div>
-    //     ))
-    // );
 }
-
-// function NewComment(props) {
-
-//     return  (
-//         <form className="comment-form" onSubmit = {props.handleSubmit}>
-//             <label>
-//                 <input type="text" value={textEntry} onChange={props.handleChange} />
-//             </label>
-//         </form>
-//     );
-// }
 
 export default function OnePost({ post }) {
     // for postTime
@@ -259,21 +227,6 @@ export default function OnePost({ post }) {
         e.preventDefault();
     }
 
-    // const handleDelete = (event) => {
-    //     const url = '/api/v1/comments/?' + comment.commentid;
-    //     fetch(url, {
-    //         method: 'DELETE',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         }
-    //     }, { credentials: "same-origin" })
-    //     .then((response) => {
-    //             if (!response.ok) throw Error(response.statusText)
-    //         })
-    //     .catch((error) => console.log(error));
-    //     e.preventDefault();
-    // }
-
     useEffect(() => {
         let ignoreStaleRequest = false;
         fetch(post.url, { credentials: "same-origin" })
@@ -342,9 +295,6 @@ export default function OnePost({ post }) {
                             onChange={handleChange}
                         />
                     </form>
-                    {/* <form className="comment-form" onSubmit = {handleSubmit}>
-                    <input className="ui input" type="text" value={textEntry} onChange={handleChange} />
-                </form> */}
                 </div>
             </div>
             <br />
