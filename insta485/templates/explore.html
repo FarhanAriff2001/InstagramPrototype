@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+    {% block index %}
+        <!--List of not following-->
+        {% for follower in n_following %}
+        <div class="card mx-auto" style="width:600px">
+        
+            <div class="card-body">
+                <img src="{{url_for('return_files', filename = follower.filename)}}" alt="{{follower['username2']}}'s pic" width="50" height="50">
+                &ensp;
+                <a href="{{url_for('show_user', username = follower.username)}}"><b>{{follower['username']}}</b></a>
+                
+                <form action="/following/?target=/users/{{users.username}}/followers/" method="post" enctype="multipart/form-data">
+                    <input type="submit" name="follow" value="follow"/>
+                    <input type="hidden" name="username" value="{{follower.username}}"/>
+                    <input type="hidden" name="operation" value="follow"/>
+                </form>  
+            </div>                
+        </div>
+        <br>
+        {% endfor %}
+    {% endblock %}
+            
