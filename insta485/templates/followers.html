@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+    {% block index %}
+        <p style="position: absolute; left: 80px; font-size: xx-large;">Followers</p>
+        
+        <br><br><br>
+        
+        <!--List of followers-->
+        {% for follower in followers %}
+        <div class="card mx-auto" style="width:600px">
+        
+            <div class="card-body">
+                <img src="{{url_for('return_files', filename = follower.file)}}" alt="{{follower.username1}}'s pic" width="50" height="50">
+                &ensp;
+                <a href="{{url_for('show_user', username = follower.username1)}}"><b>{{follower.username1}}</b></a>
+            
+                <div style="position: absolute; top: 35px; right: 35px; text-align: right;">
+                    {% if follower.username1 in follow %}
+                        following
+                        &ensp;
+                        <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                        <form action="/accounts/?target=/users/{{users.username}}/followers/" method="post" enctype="multipart/form-data">
+                            <input type="submit" name="unfollow" value="unfollow"/>
+                            <input type="hidden" name="username" value="{{follower.username1}}"/>
+                            <input type="hidden" name="operation" value="unfollow"/>
+                        </form>
+
+                    {% elif users.username != follower.username1 %}
+                        not following
+                        &ensp;
+                        <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                        <form action="/accounts/?target=/users/{{users.username}}/followers/" method="post" enctype="multipart/form-data">
+                            <input type="submit" name="follow" value="follow"/>
+                            <input type="hidden" name="username" value="{{follower.username1}}"/>
+                            <input type="hidden" name="operation" value="follow"/>
+                        </form>
+
+                    {% endif %}
+                    </div>
+
+            </div>
+        
+        </div>
+        
+        <br>
+        {% endfor %}
+    {% endblock %}
+            

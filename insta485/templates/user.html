@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+    {% block index %}
+        <div style="position: absolute; left: 50px; right: 50px;">
+            <h1>{{user.username}}</h1>
+            {% if users.username == user.username %}
+                <h4><a href="{{url_for('edit', )}}">Edit profile</a></h4>
+                <form action="/accounts/logout/" method="post" enctype="multipart/form-data">
+                <input type="submit" name="logout" value="Logout"/>
+                </form>
+            {% endif %}
+
+            <!-- If user is the logged in person -->
+            {% if user.username in follow %}
+                <p>following</p>
+                
+                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                <form action="/following/?target=/users/{{user.username}}/" method="post" enctype="multipart/form-data">
+                    <input type="submit" name="unfollow" value="unfollow"/>
+                    <input type="hidden" name="username" value="<FIXME_USERNAME_HERE>"/>
+                    <input type="hidden" name="operation" value="unfollow"/>
+                </form>
+            {% elif users.username != user.username %}
+                <p>not following</p>
+
+                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                <form action="/following/?target=/users/{{user.username}}/" method="post" enctype="multipart/form-data">
+                    <input type="submit" name="follow" value="follow"/>
+                    <input type="hidden" name="username" value="<FIXME_USERNAME_HERE>"/>
+                    <input type="hidden" name="operation" value="follow"/>
+                </form>
+            {% endif %}
+
+            <br>
+
+            <p>
+                {% if count.num == 1 %}
+                    {{count.num}} post 
+                {% else %}
+                    {{count.num}} posts 
+                {% endif %}
+
+                <a href="{{url_for('show_followers', username = user.username)}}">
+                    {% if followers.num == 1 %}
+                        <b>{{followers.num}} follower</b>
+                    {% else %}
+                        <b>{{followers.num}} followers</b>
+                    {% endif %}
+                </a> 
+
+                <a href="{{url_for('show_following', username = user.username)}}">
+                    <b>{{following.num}} following</b>
+                </a>
+
+            </p>
+
+            <p>{{user.fullname}}</p>
+            
+            {% if users.username == user.username %}
+                <div class="row">
+                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                    <form action="/posts/?target=/users/{{user.username}}/" method="post" enctype="multipart/form-data">
+                        <input type="file" name="file" accept="image/*" required/>
+                        <input type="submit" name="create_post" value="upload new post"/>
+                        <input type="hidden" name="operation" value="create"/>
+                    </form>            
+                </div>
+            {% endif %}
+
+            <div class="row">
+                {% for post in posts %}
+                    <div class="column">
+                        <a href="{{url_for('show_posts', postid = post.postid)}}">
+                            <img src="{{url_for('return_files', filename = post.filename)}}" alt="post.postid" style="width:100%">
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endblock %}
+    
+    

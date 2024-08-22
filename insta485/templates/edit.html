@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+    {% block index %}
+        
+        &ensp;&ensp;<img src="{{url_for('return_files', filename = profile.filename)}}" alt="{{users.username}}'s pic" width="50" height="50">
+        &ensp;
+        <b>{{users.username}}</b>
+
+        <div class="card mx-auto" style="width:400px">
+
+            <div class="row" >
+                <div class="column">
+                    &ensp;&ensp;<label>Photo</label><br>
+                    &ensp;&ensp;<label>Name</label><br>
+                    &ensp;&ensp;<label>Email</label><br>
+                </div>
+    
+                <div class="column">
+                    <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                    <form action="/accounts/?target=edit" method="post" enctype="multipart/form-data">
+                        <input type="file" name="file" accept="image/*"/>
+                        <input type="text" name="fullname" value="{{users.fullname}}" required/>
+                        <input type="text" name="email" value="{{profile.email}}" required/>
+                        <input type="submit" name="update" value="submit"/>
+                        <input type="hidden" name="operation" value="edit_account"/>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        
+        
+        <p><a href ="{{url_for('show_password', )}}"><b>Change password</b></a></p>
+        <p><a href ="{{url_for('delete', )}}"><b>Delete account</b></a></p>
+        
+    {% endblock %}
