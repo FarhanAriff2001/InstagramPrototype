@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import moment from "moment";
+import PropTypes from "prop-types";
 
 function OwnerTime({ ownerShowUrl, ownerImgUrl, owner, postShowUrl, created }) {
   return (
@@ -32,15 +33,15 @@ function PostImage({ imgUrl, owner, onDoubleClick }) {
   );
 }
 
-function PostLikes(props) {
+function PostLikes({ lognameLikesThis, numLikes, onClick }) {
   return (
     // Like-unlike button and display numLikes
     <>
-      <button className="like-unlike-button" onClick={props.onClick}>
-        {props.lognameLikesThis ? "unlike" : "like"}
+      <button className="like-unlike-button" type="submit" onClick={onClick}>
+        {lognameLikesThis ? "unlike" : "like"}
       </button>
       <h6 className="card-title">
-        {props.numLikes} {props.numLikes == 1 ? "like" : "likes"}
+        {numLikes} {numLikes === 1 ? "like" : "likes"}
       </h6>
     </>
   );
@@ -48,8 +49,8 @@ function PostLikes(props) {
 
 function EachComment({ comment, comments, setComments }) {
   const handleDelete = (event) => {
-    let id = comment.commentid;
-    const url = "/api/v1/comments/" + id + "/";
+    const id = comment.commentid;
+    const url = `/api/v1/comments/${id}/`;
     fetch(
       url,
       {
@@ -63,10 +64,8 @@ function EachComment({ comment, comments, setComments }) {
       .then((response) => {
         if (!response.ok) throw Error(response.statusText);
       })
-      .then((data) => {
-        const newComments = comments.filter(
-          (comment) => comment.commentid !== id
-        );
+      .then(() => {
+        const newComments = comments.filter((c) => c.commentid !== id);
         setComments(newComments);
       })
       .catch((error) => console.log(error));
@@ -81,8 +80,12 @@ function EachComment({ comment, comments, setComments }) {
       <span className="comment-text">{comment.text}</span>
       {"  "}
       {comment.lognameOwnsThis && (
-        <button className="delete-comment-button" onClick={handleDelete}>
-          {"Delete button"}
+        <button
+          className="delete-comment-button"
+          type="submit"
+          onClick={handleDelete}
+        >
+          Delete comment
         </button>
       )}
     </p>
@@ -90,21 +93,19 @@ function EachComment({ comment, comments, setComments }) {
 }
 
 function PostComments({ comments, setComments }) {
-  const rows = [];
-  comments.map((comment) => {
-    rows.push(
-      <EachComment
-        key={comment.commentid}
-        comment={comment}
-        comments={comments}
-        setComments={setComments}
-      />
-    );
-  });
-  return <>{rows}</>;
+  const rows = comments.map((comment) => (
+    <EachComment
+      key={comment.commentid}
+      comment={comment}
+      comments={comments}
+      setComments={setComments}
+    />
+  ));
+
+  return <div>{rows}</div>;
 }
 
-export default function OnePost({ post }) {
+export default function OnePost({ postid, url }) {
   // for postTime
   const [created, setCreated] = useState("");
   const [owner, setOwner] = useState("");
@@ -113,17 +114,16 @@ export default function OnePost({ post }) {
   const [postShowUrl, setPostShowUrl] = useState("");
   // for post picture
   const [imgUrl, setImgUrl] = useState("");
-  // // for post likes
+  // for post likes
   const [lognameLikesThis, setLognameLikesThis] = useState(false);
   const [numLikes, setNumLikes] = useState(0);
   const [likeUrl, setLikeUrl] = useState("");
-
-  // // for post's comments
+  // for post's comments
   const [comments, setComments] = useState([]);
-  const [comments_url, setCommentsUrl] = useState("");
-
-  // // for POST comments
+  const [commentsUrl, setCommentsUrl] = useState("");
+  // for POST comments
   const [textEntry, setTextEntry] = useState("");
+  const [isMount, setIsMount] = useState(false);
 
   const handleLike = (e) => {
     // if logname likes a post
@@ -131,9 +131,9 @@ export default function OnePost({ post }) {
       setLognameLikesThis(true);
       setNumLikes(numLikes + 1);
 
-      const url = "/api/v1/likes/?postid=" + post.postid;
+      const lurl = `/api/v1/likes/?postid=${postid}`;
       fetch(
-        url,
+        lurl,
         {
           method: "POST",
           headers: {
@@ -168,21 +168,22 @@ export default function OnePost({ post }) {
       )
         .then((response) => {
           if (!response.ok) throw Error(response.statusText);
+          setLikeUrl(null);
         })
         .catch((error) => console.log(error));
     }
     e.preventDefault();
   };
 
-  //function called when user types in text field
+  // called when user types in text field
   const handleChange = (event) => {
     setTextEntry(event.target.value);
   };
 
-  //function called when user submits
+  // function called when user submits
   const handleSubmit = (event) => {
     fetch(
-      comments_url,
+      commentsUrl,
       {
         method: "POST",
         headers: {
@@ -194,14 +195,15 @@ export default function OnePost({ post }) {
     )
       .then((response) => {
         if (!response.ok) throw Error(response.statusText);
+        setTextEntry("");
         return response.json();
       })
       .then((data) => {
-        const add_new_comments = comments.concat(data);
-        setComments(add_new_comments);
+        setComments(comments.concat(data));
       })
       .catch((error) => console.log(error));
-    //prevents website from refreshing (default action of form submission)
+
+    // prevents website from refreshing (default action of form submission)
     event.preventDefault();
   };
 
@@ -210,9 +212,9 @@ export default function OnePost({ post }) {
       setLognameLikesThis(true);
       setNumLikes(numLikes + 1);
 
-      const url = "/api/v1/likes/?postid=" + post.postid;
+      const lurl = `/api/v1/likes/?postid=${postid}`;
       fetch(
-        url,
+        lurl,
         {
           method: "POST",
           headers: {
@@ -236,7 +238,7 @@ export default function OnePost({ post }) {
 
   useEffect(() => {
     let ignoreStaleRequest = false;
-    fetch(post.url, { credentials: "same-origin" })
+    fetch(url, { credentials: "same-origin" })
       .then((response) => {
         if (!response.ok) throw Error(response.statusText);
         return response.json();
@@ -259,6 +261,7 @@ export default function OnePost({ post }) {
           // // for post comments
           setComments(data.comments);
           setCommentsUrl(data.comments_url);
+          setIsMount(true);
         }
       })
       .catch((error) => console.log(error));
@@ -266,41 +269,80 @@ export default function OnePost({ post }) {
     return () => {
       ignoreStaleRequest = true;
     };
-  }, [post.url]);
+  }, [url]);
 
-  return (
-    <>
-      <div className="card mx-auto" style={{ width: "600px" }}>
-        <OwnerTime
-          ownerShowUrl={ownerShowUrl}
-          ownerImgUrl={ownerImgUrl}
-          owner={owner}
-          postShowUrl={postShowUrl}
-          created={created}
-        />
-        <PostImage
-          imgUrl={imgUrl}
-          owner={owner}
-          onDoubleClick={handleDoubleClick}
-        />
-        <div className="card-body">
-          <PostLikes
-            lognameLikesThis={lognameLikesThis}
-            numLikes={numLikes}
-            onClick={handleLike}
+  if (isMount) {
+    return (
+      <>
+        <div className="card mx-auto" style={{ width: "600px" }}>
+          <OwnerTime
+            ownerShowUrl={ownerShowUrl}
+            ownerImgUrl={ownerImgUrl}
+            owner={owner}
+            postShowUrl={postShowUrl}
+            created={created}
           />
-          <PostComments comments={comments} setComments={setComments} />
-          <form className="comment-form" onSubmit={handleSubmit}>
-            <input
-              className="ui input"
-              type="text"
-              value={textEntry}
-              onChange={handleChange}
+          <PostImage
+            imgUrl={imgUrl}
+            owner={owner}
+            onDoubleClick={handleDoubleClick}
+          />
+          <div className="card-body">
+            <PostLikes
+              lognameLikesThis={lognameLikesThis}
+              numLikes={numLikes}
+              onClick={handleLike}
             />
-          </form>
+            <PostComments comments={comments} setComments={setComments} />
+            <form className="comment-form" onSubmit={handleSubmit}>
+              <input
+                className="ui input"
+                type="text"
+                value={textEntry}
+                onChange={handleChange}
+              />
+            </form>
+          </div>
         </div>
-      </div>
-      <br />
-    </>
-  );
+        <br />
+      </>
+    );
+  }
+  return null;
 }
+
+OnePost.propTypes = {
+  postid: PropTypes.number.isRequired,
+  url: PropTypes.string.isRequired,
+};
+
+OwnerTime.propTypes = {
+  ownerShowUrl: PropTypes.string.isRequired,
+  ownerImgUrl: PropTypes.string.isRequired,
+  owner: PropTypes.string.isRequired,
+  postShowUrl: PropTypes.string.isRequired,
+  created: PropTypes.string.isRequired,
+};
+
+PostImage.propTypes = {
+  imgUrl: PropTypes.string.isRequired,
+  owner: PropTypes.string.isRequired,
+  onDoubleClick: PropTypes.func.isRequired,
+};
+
+PostLikes.propTypes = {
+  lognameLikesThis: PropTypes.bool.isRequired,
+  numLikes: PropTypes.number.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
+EachComment.propTypes = {
+  comment: PropTypes.instanceOf(Object).isRequired,
+  comments: PropTypes.instanceOf(Array).isRequired,
+  setComments: PropTypes.func.isRequired,
+};
+
+PostComments.propTypes = {
+  comments: PropTypes.instanceOf(Array).isRequired,
+  setComments: PropTypes.func.isRequired,
+};

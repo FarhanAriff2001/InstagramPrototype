@@ -50,10 +50,10 @@ def authenticate_users():
             "SELECT password from users WHERE username= ?",
             (username, )
         )
-        password_s = cur.fetchone()
-        if password_s is None:
+        password_salt = cur.fetchone()
+        if password_salt is None:
             raise InvalidUsage('Forbidden', status_code=403)
-        stri = password_s['password']
+        stri = password_salt['password']
         lists = stri.split('$')
         salt = lists[1]
         n_password = insta485.views.index.salt_password(keyword, salt)
@@ -90,7 +90,7 @@ def get_post(postid_url_slug):
     # get contexts
     # 1. Query for comments untill imgUrl
     comments = get_comments(postid_url_slug)
-    comments_url = "/api/v1/comments/?postid={}".format(postid_url_slug)
+    comments_url = f"/api/v1/comments/?postid={postid_url_slug}"
 
     connection = insta485.model.get_db()
     cur = connection.execute(
@@ -101,7 +101,7 @@ def get_post(postid_url_slug):
     if files is None:
         raise InvalidUsage('Not found', status_code=404)
     created = files['created']
-    img_url = "/uploads/{}".format(files['filename'])
+    img_url = f"/uploads/{files['filename']}"
     # 2. Query for likes
     likes = get_likes(postid_url_slug)
     # 3. Query for owner till ownerShowUrl
@@ -113,14 +113,13 @@ def get_post(postid_url_slug):
         (postid_url_slug, )
     )
     post = cur.fetchone()
-    owner = post['owner']
-    owner_img_url = "/uploads/{}".format(post['file'])
-    owner_show_url = "/users/{}/".format(post['owner'])
-    post_show_url = "/posts/{}/".format(postid_url_slug)
-    url = "/api/v1/posts/{}/".format(postid_url_slug)
+    owner_img_url = f"/uploads/{post['file']}"
+    owner_show_url = f"/users/{post['owner']}/"
+    post_show_url = f"/posts/{postid_url_slug}/"
+    url = f"/api/v1/posts/{postid_url_slug}/"
     context = {"comments": comments, "comments_url": comments_url,
                "created": created, "imgUrl": img_url, "likes": likes,
-               "owner": owner, "ownerImgUrl": owner_img_url,
+               "owner": post['owner'], "ownerImgUrl": owner_img_url,
                "ownerShowUrl": owner_show_url,
                "postShowUrl": post_show_url, "postid": postid_url_slug,
                "url": url}
@@ -140,20 +139,16 @@ def get_comments(postid):
     logname = flask.session['username']
     comment_list = []
     for comment in comments:
-        if logname == comment['owner']:
-            boole = True
-        else:
-            boole = False
+        boole = bool(logname == comment['owner'])
         comment_list.append({'commentid': comment['commentid'],
                              'lognameOwnsThis': boole,
                              'owner': comment['owner'],
                              'ownerShowUrl':
-                                 "/users/{}/".format(comment['owner']),
+                                 f"/users/{comment['owner']}/",
                              'text':
                                  comment['text'],
                              'url':
-                                 "/api/v1/comments/{}/".format
-                                 (comment['commentid'])})
+                                 f"/api/v1/comments/{comment['commentid']}/"})
     return comment_list
 
 
@@ -180,7 +175,7 @@ def get_likes(postid):
     # check if like_owner is empty
     if like_owner is not None:
         log_like_this = True
-        url = "/api/v1/likes/{}/".format(like_owner['likeid'])
+        url = f"/api/v1/likes/{like_owner['likeid']}/"
     else:
         log_like_this = False
         url = None
@@ -206,8 +201,7 @@ def post_likes():
     like = cur.fetchone()
     if like is not None:
         context = {"likeid": like['likeid'],
-                   "url": "/api/v1/likes/{}/".format(like['likeid'])
-                   }
+                   "url": f"/api/v1/likes/{like['likeid']}/"}
         return flask.jsonify(context), 200
     context = create_like(username, postid)
     return flask.jsonify(context), 201
@@ -227,7 +221,7 @@ def create_like(username, postid):
     )
     likes = cur.fetchone()
     context = {"likeid": likes['likeid'],
-               "url": "/api/v1/likes/{}/".format(likes['likeid'])}
+               "url": f"/api/v1/likes/{likes['likeid']}/"}
     return context
 
 
@@ -296,17 +290,14 @@ def create_comment(username, postid, text):
         "WHERE rowid = last_insert_rowid()",
     )
     comment = cur.fetchone()
-    if username == owner['owner']:
-        boole = True
-    else:
-        boole = False
 
+    boole = bool(username == owner['owner'])
     context = {
               "commentid": comment['commentid'], "lognameOwnsThis": boole,
               "owner": comment['owner'],
-              "ownerShowUrl": "/users/{}/".format(comment['owner']),
+              "ownerShowUrl": f"/users/{comment['owner']}/",
               "text": comment['text'],
-              "url": "/api/v1/comments/{}/".format(comment['commentid'])}
+              "url": f"/api/v1/comments/{comment['commentid']}/"}
     return context
 
 
@@ -373,23 +364,20 @@ def get_posts():
     for i in posts:
         posts_lists.insert(counter, i["postid"])
         counter = counter + 1
-    url = "/api/v1/posts/"
-    url1 = flask.request.environ['RAW_URI']
-    next = ""
+
+    next_url = ""
     if counter < size:
-        next = ""
+        next_url = ""
     else:
-        size_s = "?size={}".format(size)
         page += 1
-        page_s = "&page={}".format(page)
-        lte_s = "&postid_lte={}".format(lte)
-        next = url + size_s + page_s + lte_s
+        next_url = f"/api/v1/posts/?size={size}&page={page}&postid_lte={lte}"
+
     results = []
     for post in posts_lists:
         results.append(
           {"postid": post,
-           "url": "/api/v1/posts/{}/".format(post)
-           }
-          )
-    context = {"next": next, "results": results, "url": url1}
+           "url": f"/api/v1/posts/{post}/"
+           })
+    context = {"next": next_url, "results": results,
+               "url": flask.request.environ['RAW_URI']}
     return flask.jsonify(context), 200
